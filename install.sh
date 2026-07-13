@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo="johnlindquist/claudex"
-ref="${CLAUDEX_REF:-v1.0.1}"
+ref="${CLAUDEX_REF:-v1.0.2}"
 
 bootstrap() {
   [[ "$ref" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ ]] \

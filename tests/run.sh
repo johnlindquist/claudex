@@ -14,6 +14,7 @@ if [[ "${CLAUDEX_RUN_LIVE:-0}" == 1 ]]; then
   bash "$test_dir/live-permissions.sh"
   bash "$test_dir/live-resume.sh"
   bash "$test_dir/live-subagent-commit.sh"
+  bash "$test_dir/live-default-subagent-commit.sh"
 else
   printf 'SKIP live tests (set CLAUDEX_RUN_LIVE=1)\n'
 fi

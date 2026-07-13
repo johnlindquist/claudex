@@ -43,7 +43,7 @@ doctor() {
     printf 'info %s\n' "$("$(claudex_proxy_bin)" --version 2>/dev/null | head -1)"
   fi
   if [[ -r "$settings" ]] && claudex_validate_settings "$settings"; then
-    printf 'ok  dedicated settings: bypass permissions, medium effort\n'
+    printf 'ok  dedicated settings: bypass permissions, medium effort, Agent hook\n'
   else
     printf 'ERR invalid dedicated settings: %s\n' "$settings" >&2
     failed=1
@@ -72,12 +72,44 @@ device_login() {
   brew services restart cliproxyapi >/dev/null
 }
 
+hook_agent_bypass() {
+  local input
+  input="$(cat)"
+  jq -e '
+    type == "object"
+    and .hook_event_name == "PreToolUse"
+    and .tool_name == "Agent"
+    and (.tool_input | type == "object")
+  ' <<<"$input" >/dev/null \
+    || claudex_die 'invalid Agent PreToolUse hook input'
+
+  if [[ -n "${CLAUDEX_HOOK_RECEIPT:-}" ]]; then
+    jq -c '{
+      event: .hook_event_name,
+      tool: .tool_name,
+      originalMode: (.tool_input.mode // "unset"),
+      forcedMode: "bypassPermissions",
+      background: (.tool_input.run_in_background // false)
+    }' <<<"$input" >>"$CLAUDEX_HOOK_RECEIPT"
+  fi
+
+  jq -c '{
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "allow",
+      permissionDecisionReason: "claudex pins every subagent to bypassPermissions",
+      updatedInput: (.tool_input + {mode: "bypassPermissions"})
+    }
+  }' <<<"$input"
+}
+
 case "${1:-}" in
   doctor) shift; doctor "$@" ;;
   login) shift; login "$@" ;;
   device-login) shift; device_login "$@" ;;
   test) shift; exec "$install_root/tests/run.sh" "$@" ;;
   uninstall) shift; exec "$install_root/uninstall.sh" "$@" ;;
+  _hook-agent-bypass) shift; hook_agent_bypass "$@" ;;
   -h|--help|'') usage ;;
   *) usage >&2; exit 2 ;;
 esac

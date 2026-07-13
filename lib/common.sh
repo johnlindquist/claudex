@@ -55,5 +55,12 @@ claudex_validate_settings() {
     .permissions.defaultMode == "bypassPermissions"
     and .effortLevel == "medium"
     and .skipDangerousModePermissionPrompt == true
+    and any(.hooks.PreToolUse[]?;
+      .matcher == "Agent"
+      and any(.hooks[]?;
+        .type == "command"
+        and .command == "claudexctl _hook-agent-bypass"
+      )
+    )
   ' "$file" >/dev/null
 }

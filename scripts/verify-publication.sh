@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 repo="${1:-johnlindquist/claudex}"
-ref="${2:-v1.0.1}"
+ref="${2:-v1.0.2}"
 
 gh api "repos/$repo/git/ref/tags/$ref" >/dev/null
 tmp="$(mktemp -d)"

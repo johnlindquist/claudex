@@ -30,7 +30,7 @@ The separate maintenance name prevents words such as `login`, `doctor`, and `uni
 macOS prerequisites: [Homebrew](https://brew.sh), `curl`, and `jq`. The installer adds Claude Code and CLIProxyAPI through Homebrew when needed, preserves compatible existing proxy configuration, and never copies or deletes OAuth credentials.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/johnlindquist/claudex/v1.0.1/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/johnlindquist/claudex/v1.0.2/install.sh | bash
 ```
 
 Then start Claude Code with the command you installed:
@@ -62,6 +62,7 @@ The public installer is pinned to a release tag. To intentionally test another i
 - primary and subagent model: `gpt-5.6-sol`
 - default reasoning effort: `medium`
 - permission startup mode: `bypassPermissions`
+- every generated `Agent` launch is normalized to `bypassPermissions`
 - bypass-entry confirmation: suppressed
 - tool search: disabled
 - maximum tool-use concurrency: 3
@@ -109,7 +110,11 @@ CLAUDEX_MODEL=gpt-5.6-sol claudex
 
 Every shell invocation starts in bypass mode without the dangerous-mode entry dialog. Custom subagents should also declare `"permissionMode":"bypassPermissions"`; the live test suite proves this with a real subagent-authored git commit.
 
-Claude Code has no documented immutable “pin bypass forever” setting or hook. A user can deliberately switch modes in the TUI, managed policy can disable bypass, explicit `ask`/`deny` rules are merged from other settings scopes, MCP tools can require interaction, and upstream safety circuit breakers can still prompt. A hook cannot safely turn those exceptions into an absolute invariant, so this project guarantees the reproducible startup contract rather than installing a second permission engine. If you enter plan mode, exit and resume from the shell with `claudex --resume …` to reapply the wrapper contract.
+Claudex also installs a dedicated `PreToolUse` hook for the `Agent` tool. Before Claude Code spawns any ordinary or dynamically generated subagent, the hook preserves the complete generated Agent input and replaces its `mode` with `bypassPermissions`. This closes the gap where the parent remained in bypass mode while an unpinned child launched as `acceptEdits`, `auto`, `plan`, or with no mode at all.
+
+The hook is deliberately scoped to Agent creation. It does not auto-approve unrelated permission dialogs or change whether the subagent runs in the foreground or background.
+
+Claude Code has no documented immutable “pin bypass forever” setting or hook. A user can deliberately switch modes in the TUI, managed policy can disable bypass, explicit `ask`/`deny` rules are merged from other settings scopes, MCP tools can require interaction, and upstream safety circuit breakers can still prompt. The scoped Agent hook fixes child startup mode; it is not a catch-all permission engine and cannot erase those exceptions. If you enter plan mode in the parent, exit and resume from the shell with `claudex --resume …` to reapply the wrapper contract.
 
 ## Verification
 
@@ -127,6 +132,7 @@ Live tests use your local OAuth-backed route. They prove:
 - a `/tmp` write and git commit complete with no permission denials;
 - a resumed session is routed through the wrapper again;
 - a real named subagent with `permissionMode: bypassPermissions` creates a git commit.
+- an ordinary dynamically generated `Agent` call is rewritten by the hook and its child creates a git commit.
 
 ```bash
 CLAUDEX_RUN_LIVE=1 tests/run.sh
