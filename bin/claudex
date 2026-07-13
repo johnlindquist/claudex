@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+settings_file="${CLAUDEX_SETTINGS_FILE:-$config_home/claudex/settings.json}"
+claude_bin="${CLAUDEX_CLAUDE_BIN:-claude}"
+
+export ANTHROPIC_BASE_URL="${CLAUDEX_BASE_URL:-http://127.0.0.1:8317}"
+export ANTHROPIC_AUTH_TOKEN="${CLAUDEX_AUTH_TOKEN:-claudex-local}"
+export CLAUDE_CODE_SUBAGENT_MODEL="${CLAUDEX_MODEL:-gpt-5.6-sol}"
+export CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1
+export CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY="${CLAUDEX_MAX_TOOL_USE_CONCURRENCY:-3}"
+export ENABLE_TOOL_SEARCH=false
+
+exec "$claude_bin" \
+  --settings "$settings_file" \
+  --model "${CLAUDEX_MODEL:-gpt-5.6-sol}" \
+  --effort "${CLAUDEX_EFFORT:-medium}" \
+  --dangerously-skip-permissions \
+  "$@"

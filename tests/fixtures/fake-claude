@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+: "${CLAUDEX_TEST_RECEIPT:?CLAUDEX_TEST_RECEIPT is required}"
+{
+  printf 'ANTHROPIC_BASE_URL=%s\n' "${ANTHROPIC_BASE_URL:-}"
+  printf 'ANTHROPIC_AUTH_TOKEN=%s\n' "${ANTHROPIC_AUTH_TOKEN:-}"
+  printf 'CLAUDE_CODE_SUBAGENT_MODEL=%s\n' "${CLAUDE_CODE_SUBAGENT_MODEL:-}"
+  printf 'CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=%s\n' "${CLAUDE_CODE_ALWAYS_ENABLE_EFFORT:-}"
+  printf 'CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY=%s\n' "${CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY:-}"
+  printf 'ENABLE_TOOL_SEARCH=%s\n' "${ENABLE_TOOL_SEARCH:-}"
+  printf 'argv:'
+  printf ' <%s>' "$@"
+  printf '\n'
+} >"$CLAUDEX_TEST_RECEIPT"

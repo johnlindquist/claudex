@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax
+        run: bash -n install.sh uninstall.sh bin/claudex bin/claudexctl lib/common.sh tests/*.sh scripts/*.sh
+      - name: Static and hermetic tests
+        run: tests/run.sh
+      - name: Secret scan
+        run: scripts/secret-scan.sh

@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source_path="${BASH_SOURCE[0]}"
+while [[ -L "$source_path" ]]; do
+  source_dir="$(cd "$(dirname "$source_path")" && pwd)"
+  source_path="$(readlink "$source_path")"
+  [[ "$source_path" == /* ]] || source_path="$source_dir/$source_path"
+done
+script_dir="$(cd "$(dirname "$source_path")" && pwd)"
+install_root="$(cd "$script_dir/.." && pwd)"
+# shellcheck source=../lib/common.sh
+source "$install_root/lib/common.sh"
+
+usage() {
+  cat <<'EOF'
+Usage: claudexctl <command>
+
+Commands:
+  doctor       Validate the wrapper, settings, proxy, and model route
+  login        Add another Codex/OpenAI OAuth account in a browser
+  device-login Add an account with device login when supported
+  test         Run the public static test suite
+  uninstall    Remove claudex-owned files; pass --purge-proxy explicitly
+EOF
+}
+
+doctor() {
+  local failed=0 settings
+  settings="$(claudex_config_home)/claudex/settings.json"
+  for command_name in claude jq curl; do
+    if command -v "$command_name" >/dev/null 2>&1; then
+      printf 'ok  %s\n' "$command_name"
+    else
+      printf 'ERR missing %s\n' "$command_name" >&2
+      failed=1
+    fi
+  done
+  if command -v claude >/dev/null 2>&1; then
+    printf 'info %s\n' "$(claude --version 2>/dev/null)"
+  fi
+  if [[ -x "$(claudex_proxy_bin)" ]]; then
+    printf 'info %s\n' "$("$(claudex_proxy_bin)" --version 2>/dev/null | head -1)"
+  fi
+  if [[ -r "$settings" ]] && claudex_validate_settings "$settings"; then
+    printf 'ok  dedicated settings: bypass permissions, medium effort\n'
+  else
+    printf 'ERR invalid dedicated settings: %s\n' "$settings" >&2
+    failed=1
+  fi
+  if claudex_proxy_models_ok; then
+    printf 'ok  gpt-5.6-sol is available through 127.0.0.1:8317\n'
+  else
+    printf 'ERR gpt-5.6-sol is not available through the local proxy\n' >&2
+    failed=1
+  fi
+  return "$failed"
+}
+
+login() {
+  command -v brew >/dev/null 2>&1 || claudex_die 'Homebrew is required'
+  "$(claudex_proxy_bin)" --config "$(claudex_proxy_config)" --codex-login "$@"
+  brew services restart cliproxyapi >/dev/null
+}
+
+device_login() {
+  local proxy_bin
+  proxy_bin="$(claudex_proxy_bin)"
+  "$proxy_bin" --help 2>&1 | grep -q -- 'codex-device-login' \
+    || claudex_die 'this CLIProxyAPI build does not support device login'
+  "$proxy_bin" --config "$(claudex_proxy_config)" --codex-device-login "$@"
+  brew services restart cliproxyapi >/dev/null
+}
+
+case "${1:-}" in
+  doctor) shift; doctor "$@" ;;
+  login) shift; login "$@" ;;
+  device-login) shift; device_login "$@" ;;
+  test) shift; exec "$install_root/tests/run.sh" "$@" ;;
+  uninstall) shift; exec "$install_root/uninstall.sh" "$@" ;;
+  -h|--help|'') usage ;;
+  *) usage >&2; exit 2 ;;
+esac
