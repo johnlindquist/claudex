@@ -2,6 +2,29 @@
 
 Run Claude Code's interface and tools through a local CLIProxyAPI pool backed by Codex OAuth accounts, with a predictable model, effort, and permission profile.
 
+## Which command should I use?
+
+**Use `claudex` for your everyday Claude Code sessions.** It is the main command this project installs and accepts the same arguments you would normally pass to `claude`:
+
+```bash
+claudex
+claudex -p 'Explain this repository'
+claudex --continue
+claudex --resume <session-id>
+```
+
+`claudexctl` is only the administrative companion for setting up and maintaining the local proxy. It does not replace `claudex` and it does not start a coding session.
+
+| Command | Purpose |
+| --- | --- |
+| `claudex` | Start Claude Code through the Codex-backed route |
+| `claudexctl doctor` | Diagnose the installation and model route |
+| `claudexctl login` | Add another Codex/OpenAI OAuth account |
+| `claudexctl test` | Run the packaged static and hermetic tests |
+| `claudexctl uninstall` | Remove claudex-owned files |
+
+The separate maintenance name prevents words such as `login`, `doctor`, and `uninstall` from being mistaken for prompts or arguments that should be forwarded to Claude Code.
+
 ## Install
 
 macOS prerequisites: [Homebrew](https://brew.sh), `curl`, and `jq`. The installer adds Claude Code and CLIProxyAPI through Homebrew when needed, preserves compatible existing proxy configuration, and never copies or deletes OAuth credentials.
@@ -10,11 +33,22 @@ macOS prerequisites: [Homebrew](https://brew.sh), `curl`, and `jq`. The installe
 curl -fsSL https://raw.githubusercontent.com/johnlindquist/claudex/v1.0.1/install.sh | bash
 ```
 
-Then verify the route:
+Then start Claude Code with the command you installed:
+
+```bash
+claudex
+```
+
+Or run a noninteractive prompt:
+
+```bash
+claudex -p 'Reply with the model you are using.'
+```
+
+Use the companion diagnostic only when you want to inspect the installation or route:
 
 ```bash
 claudexctl doctor
-claudex -p 'Reply with the model you are using.'
 ```
 
 The public installer is pinned to a release tag. To intentionally test another immutable release, set `CLAUDEX_REF` and fetch that release's installer.
@@ -34,7 +68,7 @@ The public installer is pinned to a release tag. To intentionally test another i
 
 The wrapper passes both the dedicated settings file and `--dangerously-skip-permissions`. It does not set `CLAUDE_CONFIG_DIR`, so Claude Code continues to discover normal `CLAUDE.md` files, skills, commands, hooks, and user/project settings. Ordinary `claude` is untouched.
 
-Configuration is installed at `${XDG_CONFIG_HOME:-$HOME/.config}/claudex`. The commands are linked into Homebrew's `bin` directory.
+Configuration is installed at `${XDG_CONFIG_HOME:-$HOME/.config}/claudex`. Both the main `claudex` executable and the administrative `claudexctl` companion are linked into Homebrew's `bin` directory.
 
 ## Accounts and profiles
 
