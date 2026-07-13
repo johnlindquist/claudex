@@ -7,7 +7,7 @@ Run Claude Code's interface and tools through a local CLIProxyAPI pool backed by
 macOS prerequisites: [Homebrew](https://brew.sh), `curl`, and `jq`. The installer adds Claude Code and CLIProxyAPI through Homebrew when needed, preserves compatible existing proxy configuration, and never copies or deletes OAuth credentials.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/johnlindquist/claudex/v1.0.0/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/johnlindquist/claudex/v1.0.1/install.sh | bash
 ```
 
 Then verify the route:

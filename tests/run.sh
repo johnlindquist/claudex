@@ -4,6 +4,9 @@ set -euo pipefail
 test_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 bash "$test_dir/wrapper-contract.sh"
 bash "$test_dir/hermetic-install.sh"
+if [[ "${CLAUDEX_INSTALLED_TEST:-0}" != 1 ]]; then
+  bash "$test_dir/installed-control.sh"
+fi
 
 if [[ "${CLAUDEX_RUN_LIVE:-0}" == 1 ]]; then
   bash "$test_dir/live-model.sh"

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo="johnlindquist/claudex"
-ref="${CLAUDEX_REF:-v1.0.0}"
+ref="${CLAUDEX_REF:-v1.0.1}"
 
 bootstrap() {
   [[ "$ref" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ ]] \
@@ -114,12 +114,15 @@ install_root="$(claudex_install_root)"
 mkdir -p "$install_root/bin" "$install_root/lib"
 cp "$script_dir/bin/claudex" "$script_dir/bin/claudexctl" "$install_root/bin/"
 cp "$script_dir/lib/common.sh" "$install_root/lib/"
+cp "$script_dir/install.sh" "$install_root/install.sh"
 cp "$script_dir/config/claudex/settings.json" "$install_root/settings.json"
 cp "$script_dir/uninstall.sh" "$install_root/uninstall.sh"
-rm -rf "$install_root/tests" "$install_root/scripts"
+rm -rf "$install_root/config" "$install_root/tests" "$install_root/scripts"
+cp -R "$script_dir/config" "$install_root/config"
 cp -R "$script_dir/tests" "$install_root/tests"
 cp -R "$script_dir/scripts" "$install_root/scripts"
-chmod +x "$install_root/bin/claudex" "$install_root/bin/claudexctl" "$install_root/uninstall.sh"
+chmod +x "$install_root/bin/claudex" "$install_root/bin/claudexctl" \
+  "$install_root/install.sh" "$install_root/uninstall.sh"
 
 ln -sfn "$install_root/bin/claudex" "$brew_prefix/bin/claudex"
 ln -sfn "$install_root/bin/claudexctl" "$brew_prefix/bin/claudexctl"
